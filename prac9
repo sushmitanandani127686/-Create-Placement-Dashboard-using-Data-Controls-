@@ -1,0 +1,217 @@
+-- Create the database (run once while connected to master)
+IF DB_ID('PlacementDB') IS NULL
+    CREATE DATABASE PlacementDB;
+GO
+
+USE PlacementDB;
+GO
+
+DROP TABLE IF EXISTS Placement;
+GO
+
+-- Create the Placement table
+CREATE TABLE Placement
+(
+    PlacementID   INT PRIMARY KEY IDENTITY(1,1),   -- auto-increment key
+    StudentName   VARCHAR(100)  NOT NULL,
+    Branch        VARCHAR(50)   NOT NULL,
+    Company       VARCHAR(100)  NOT NULL,
+    Package       DECIMAL(5,2)  NOT NULL,          -- package in LPA
+    PlacementDate DATE          NOT NULL
+);
+
+-- Insert sample records
+INSERT INTO Placement
+    (StudentName, Branch, Company, Package, PlacementDate)
+VALUES
+    ('Aarav Shah',   'Computer',   'TCS',         3.60, '2026-01-12'),
+    ('Diya Patel',   'Computer',   'Infosys',     4.20, '2026-01-12'),
+    ('Rohan Mehta',  'Computer',   'Wipro',       3.80, '2026-01-20'),
+    ('Isha Joshi',   'IT',         'TCS',         3.60, '2026-01-25'),
+    ('Karan Desai',  'IT',         'Accenture',   6.50, '2026-02-03'),
+    ('Neha Trivedi', 'IT',         'Infosys',     4.20, '2026-02-03'),
+    ('Mihir Vora',   'Electronics','L&T',         5.10, '2026-02-10'),
+    ('Pooja Rana',
+    <%@ Page Language="C#" AutoEventWireup="true"
+    CodeBehind="Dashboard.aspx.cs" Inherits="WebApplication11.Dashboard" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Placement Dashboard</title>
+    <style>
+        body  { font-family: Arial, sans-serif; margin: 20px; }
+        .card { display: inline-block; width: 150px; padding: 10px;
+                margin: 0 8px 12px 0; border: 1px solid #999;
+                text-align: center; }
+        .card b { display: block; font-size: 22px; }
+    </style>
+</head>
+<body>
+<form id="form1" runat="server">
+    <h2>Placement Dashboard</h2>
+
+    <!-- Summary cards (filled from Dashboard.aspx.cs) -->
+    <div class="card">Students Placed
+        <b><asp:Label ID="lblTotal" runat="server" /></b></div>
+    <div class="card">Average Package
+        <b><asp:Label ID="lblAverage" runat="server" /></b></div>
+    <div class="card">Highest Package
+        <b><asp:Label ID="lblHighest" runat="server" /></b></div>
+    <div class="card">Companies
+        <b><asp:Label ID="lblCompanies" runat="server" /></b></div>
+
+    <!-- Data control 1: branch filter bound to SqlDataSource -->
+    <p>Branch:
+        <asp:DropDownList ID="ddlBranch" runat="server"
+            DataSourceID="dsBranch" DataTextField="Branch"
+            DataValueField="Branch" AutoPostBack="True"
+            AppendDataBoundItems="True"
+            OnSelectedIndexChanged="ddlBranch_SelectedIndexChanged">
+            <asp:ListItem Text="All" Value="All" />
+        </asp:DropDownList>
+    </p>
+
+    <!-- Data control 2: placement records (select + paging + sorting) -->
+    <asp:GridView ID="gvPlacement" runat="server"
+        DataSourceID="dsPlacement" AutoGenerateColumns="False"
+        AutoGenerateSelectButton="True" AllowPaging="True" PageSize="5"
+        AllowSorting="True" DataKeyNames="PlacementID" CellPadding="5"
+        BorderColor="Black" BorderWidth="1px">
+        <SelectedRowStyle BackColor="#FFF2CC" />
+        <Columns>
+            <asp:BoundField DataField="PlacementID" HeaderText="ID"
+                SortExpression="PlacementID" />
+            <asp:BoundField DataField="StudentName" HeaderText="Student"
+                SortExpression="StudentName" />
+            <asp:BoundField DataField="Branch" HeaderText="Branch"
+                SortExpression="Branch" />
+            <asp:BoundField DataField="Company" HeaderText="Company"
+                SortExpression="Company" />
+            <asp:BoundField DataField="Package" HeaderText="Package (LPA)"
+                SortExpression="Package" DataFormatString="{0:0.00}" />
+            <asp:BoundField DataField="PlacementDate" HeaderText="Date"
+                SortExpression="PlacementDate"
+                DataFormatString="{0:dd-MM-yyyy}" />
+        </Columns>
+    </asp:GridView>
+
+    <!-- Data control 3: details of the row selected in the grid -->
+    <h3>Selected Student Details</h3>
+    <asp:DetailsView ID="dvDetails" runat="server"
+        DataSourceID="dsDetails" AutoGenerateRows="False"
+        CellPadding="5" BorderColor="Black" BorderWidth="1px"
+        EmptyDataText="Click Select on a row to see its details.">
+        <Fields>
+            <asp:BoundField DataField="StudentName" HeaderText="Student" />
+            <asp:BoundField DataField="Branch" HeaderText="Branch" />
+            <asp:BoundField DataField="Company" HeaderText="Company" />
+            <asp:BoundField DataField="Package" HeaderText="Package (LPA)"
+                DataFormatString="{0:0.00}" />
+            <asp:BoundField DataField="PlacementDate" HeaderText="Date"
+                DataFormatString="{0:dd-MM-yyyy}" />
+        </Fields>
+    </asp:DetailsView>
+
+    <!-- Data control 4: company-wise summary -->
+    <h3>Company-wise Placements</h3>
+    <asp:GridView ID="gvCompany" runat="server"
+        DataSourceID="dsCompany" AutoGenerateColumns="True"
+        CellPadding="5" BorderColor="Black" BorderWidth="1px" />
+
+    <!-- SqlDataSource controls (no code-behind needed) -->
+    <asp:SqlDataSource ID="dsBranch" runat="server"
+        ConnectionString="<%$ ConnectionStrings:PlacementConnection %>"
+        SelectCommand="SELECT DISTINCT Branch FROM Placement
+                       ORDER BY Branch" />
+
+    <asp:SqlDataSource ID="dsPlacement" runat="server"
+        ConnectionString="<%$ ConnectionStrings:PlacementConnection %>"
+        SelectCommand="SELECT PlacementID, StudentName, Branch, Company,
+                       Package, PlacementDate FROM Placement
+                       WHERE (@Branch = 'All' OR Branch = @Branch)">
+        <SelectParameters>
+            <asp:ControlParameter Name="Branch" ControlID="ddlBranch"
+                PropertyName="SelectedValue" Type="String" />
+        </SelectParameters>
+    </asp:SqlDataSource>
+
+    <asp:SqlDataSource ID="dsDetails" runat="server"
+        ConnectionString="<%$ ConnectionStrings:PlacementConnection %>"
+        SelectCommand="SELECT PlacementID, StudentName, Branch, Company,
+                       Package, PlacementDate FROM Placement
+                       WHERE PlacementID = @id">
+        <SelectParameters>
+            <asp:ControlParameter Name="id" ControlID="gvPlacement"
+                PropertyName="SelectedValue" Type="Int32" />
+        </SelectParameters>
+    </asp:SqlDataSource>
+
+    <asp:SqlDataSource ID="dsCompany" runat="server"
+        ConnectionString="<%$ ConnectionStrings:PlacementConnection %>"
+        SelectCommand="SELECT Company, COUNT(*) AS Students,
+                       MAX(Package) AS HighestPackage FROM Placement
+                       GROUP BY Company ORDER BY Students DESC" />
+</form>
+</body>
+</html>
+using System;
+using System.Configuration;
+using System.Data.SqlClient;
+
+namespace WebApplication11
+{
+    public partial class Dashboard : System.Web.UI.Page
+    {
+        // Connection string read from Web.config
+        string cs = ConfigurationManager
+            .ConnectionStrings["PlacementConnection"]
+            .ConnectionString;
+
+        // Fill the summary cards only on the first request
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                LoadSummary();
+            }
+        }
+
+        // ADO.NET: read the dashboard summary figures in a single query
+        void LoadSummary()
+        {
+            string sql =
+                "SELECT COUNT(*), ISNULL(AVG(Package), 0), " +
+                "ISNULL(MAX(Package), 0), COUNT(DISTINCT Company) " +
+                "FROM Placement";
+
+            using (SqlConnection con = new SqlConnection(cs))
+            using (SqlCommand cmd = new SqlCommand(sql, con))
+            {
+                con.Open();
+
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    if (dr.Read())
+                    {
+                        lblTotal.Text     = dr.GetInt32(0).ToString();
+                        lblAverage.Text   = dr.GetDecimal(1).ToString("0.00")
+                                            + " LPA";
+                        lblHighest.Text   = dr.GetDecimal(2).ToString("0.00")
+                                            + " LPA";
+                        lblCompanies.Text = dr.GetInt32(3).ToString();
+                    }
+                }
+            }
+        }
+
+        // When the filter changes: show page 1 and clear the selected row
+        protected void ddlBranch_SelectedIndexChanged(
+            object sender, EventArgs e)
+        {
+            gvPlacement.PageIndex = 0;
+            gvPlacement.SelectedIndex = -1;
+        }
+    }
+}
